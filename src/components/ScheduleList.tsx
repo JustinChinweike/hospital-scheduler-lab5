@@ -32,7 +32,8 @@ const ScheduleList = () => {
   // Force a re-render after mounting to ensure data is loaded
   useEffect(() => {
     setLoaded(true);
-  }, []);
+    console.log("Schedule list mounted, schedules:", filteredSchedules);
+  }, [filteredSchedules]);
 
   const handleFilterChange = () => {
     setFilterCriteria({
@@ -40,6 +41,7 @@ const ScheduleList = () => {
       patientName: "",
       department: filterDepartment,
     });
+    console.log("Applying filters:", filterDoctorName, filterDepartment);
   };
 
   const clearFilters = () => {
@@ -50,6 +52,7 @@ const ScheduleList = () => {
       patientName: "",
       department: "",
     });
+    console.log("Filters cleared");
   };
 
   return (
@@ -124,13 +127,19 @@ const ScheduleList = () => {
         <div className="space-y-6">
           <div>
             <Label htmlFor="filterDepartment">Department</Label>
-            <Select value={filterDepartment} onValueChange={setFilterDepartment}>
+            <Select 
+              value={filterDepartment} 
+              onValueChange={(value) => {
+                console.log("Department selected:", value);
+                setFilterDepartment(value);
+              }}
+            >
               <SelectTrigger id="filterDepartment" className="bg-teal-400 text-black border-0 mt-2">
                 <SelectValue placeholder="Select department" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">All Departments</SelectItem>
-                {departments.map(dept => (
+                {departments.map((dept) => (
                   <SelectItem key={dept} value={dept}>{dept}</SelectItem>
                 ))}
               </SelectContent>

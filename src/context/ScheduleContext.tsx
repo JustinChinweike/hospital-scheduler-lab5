@@ -25,8 +25,11 @@ const ScheduleContext = createContext<ScheduleContextType | undefined>(undefined
 export const ScheduleProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Initialize state from localStorage or fall back to initialSchedules
   const [schedules, setSchedules] = useState<Schedule[]>(() => {
-    const savedSchedules = localStorage.getItem(LOCAL_STORAGE_KEY);
-    return savedSchedules ? JSON.parse(savedSchedules) : initialSchedules;
+    if (typeof window !== 'undefined') {
+      const savedSchedules = localStorage.getItem(LOCAL_STORAGE_KEY);
+      return savedSchedules ? JSON.parse(savedSchedules) : initialSchedules;
+    }
+    return initialSchedules;
   });
   
   const [filterCriteria, setFilterCriteria] = useState({
@@ -37,6 +40,7 @@ export const ScheduleProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   // Save to localStorage whenever schedules change
   useEffect(() => {
+    console.log("Saving schedules to localStorage:", schedules);
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(schedules));
   }, [schedules]);
 
@@ -59,7 +63,10 @@ export const ScheduleProvider: React.FC<{ children: ReactNode }> = ({ children }
       id: Date.now().toString(), // Generate a unique ID
     };
     
-    setSchedules(prevSchedules => [...prevSchedules, newSchedule]);
+    setSchedules(prevSchedules => {
+      console.log("Adding new schedule:", newSchedule);
+      return [...prevSchedules, newSchedule];
+    });
     
     toast({
       title: "Schedule Added",
@@ -69,13 +76,14 @@ export const ScheduleProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   // Update an existing schedule
   const updateSchedule = (id: string, updatedSchedule: Omit<Schedule, "id">) => {
-    setSchedules(prevSchedules => 
-      prevSchedules.map(schedule => 
+    setSchedules(prevSchedules => {
+      console.log("Updating schedule:", id, updatedSchedule);
+      return prevSchedules.map(schedule => 
         schedule.id === id 
           ? { ...updatedSchedule, id } 
           : schedule
-      )
-    );
+      );
+    });
     
     toast({
       title: "Schedule Updated",
@@ -85,7 +93,10 @@ export const ScheduleProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   // Delete a schedule
   const deleteSchedule = (id: string) => {
-    setSchedules(prevSchedules => prevSchedules.filter(schedule => schedule.id !== id));
+    setSchedules(prevSchedules => {
+      console.log("Deleting schedule:", id);
+      return prevSchedules.filter(schedule => schedule.id !== id);
+    });
     
     toast({
       title: "Schedule Deleted",
