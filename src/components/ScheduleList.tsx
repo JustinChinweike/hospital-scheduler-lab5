@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSchedule } from "@/context/ScheduleContext";
 import { format, parseISO } from "date-fns";
 import { departments } from "@/data/mockData";
@@ -27,6 +27,12 @@ const ScheduleList = () => {
   const [selectedSchedule, setSelectedSchedule] = useState<string | null>(null);
   const [filterDepartment, setFilterDepartment] = useState("");
   const [filterDoctorName, setFilterDoctorName] = useState("");
+  const [loaded, setLoaded] = useState(false);
+  
+  // Force a re-render after mounting to ensure data is loaded
+  useEffect(() => {
+    setLoaded(true);
+  }, []);
 
   const handleFilterChange = () => {
     setFilterCriteria({
