@@ -4,9 +4,14 @@ import { ScheduleProvider } from "@/context/ScheduleContext";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
+import { useEffect } from "react";
 
 const ListSchedulePage = () => {
   const navigate = useNavigate();
+  
+  useEffect(() => {
+    console.log("ListSchedulePage mounted");
+  }, []);
   
   return (
     <ScheduleProvider>

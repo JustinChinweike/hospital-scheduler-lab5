@@ -51,7 +51,7 @@ export const ScheduleProvider: React.FC<{ children: ReactNode }> = ({ children }
         schedule.doctorName.toLowerCase().includes(filterCriteria.doctorName.toLowerCase())) &&
       (filterCriteria.patientName === "" || 
         schedule.patientName.toLowerCase().includes(filterCriteria.patientName.toLowerCase())) &&
-      (filterCriteria.department === "" || 
+      (filterCriteria.department === "" || filterCriteria.department === "all" || 
         schedule.department === filterCriteria.department)
     );
   });

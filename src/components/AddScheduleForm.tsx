@@ -81,6 +81,7 @@ const AddScheduleForm = () => {
     e.preventDefault();
     
     if (validateForm()) {
+      console.log("Form validated, submitting...");
       // Format date and time for storage
       const dateTime = date 
         ? `${format(date, "yyyy-MM-dd")}T${time}:00`
@@ -93,7 +94,11 @@ const AddScheduleForm = () => {
         department,
       });
       
-      navigate("/list-schedule");
+      // Navigate to list schedule page
+      setTimeout(() => {
+        console.log("Navigating to list schedule page");
+        navigate("/list-schedule");
+      }, 100);
     }
   };
 
