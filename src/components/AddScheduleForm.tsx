@@ -93,7 +93,7 @@ const AddScheduleForm = () => {
         department,
       });
       
-      navigate("/");
+      navigate("/list-schedule");
     }
   };
 

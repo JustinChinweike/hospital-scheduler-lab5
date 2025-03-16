@@ -47,7 +47,8 @@ export const ScheduleProvider: React.FC<{ children: ReactNode }> = ({ children }
       id: Date.now().toString(), // Generate a unique ID
     };
     
-    setSchedules([...schedules, newSchedule]);
+    setSchedules(prevSchedules => [...prevSchedules, newSchedule]);
+    
     toast({
       title: "Schedule Added",
       description: "The appointment has been successfully scheduled",
