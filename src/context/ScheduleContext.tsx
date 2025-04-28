@@ -1,133 +1,186 @@
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+  useCallback,
+} from "react";
+import { io, Socket } from "socket.io-client";
+import { Schedule } from "@/types/schedule";
+import { toast } from "@/components/ui/use-toast";
 
-import React, { createContext, useState, useContext, ReactNode, useEffect } from "react";
-import { Schedule } from "../types/schedule";
-import { initialSchedules } from "../data/mockData";
-import { toast } from "@/hooks/use-toast";
-
-interface ScheduleContextType {
+/* ---------- context shape ---------- */
+interface ScheduleCtx {
   schedules: Schedule[];
-  addSchedule: (schedule: Omit<Schedule, "id">) => void;
-  updateSchedule: (id: string, updatedSchedule: Omit<Schedule, "id">) => void;
-  deleteSchedule: (id: string) => void;
+  addSchedule: (s: Omit<Schedule, "id">) => Promise<void>;
+  updateSchedule: (id: string, s: Partial<Schedule>) => Promise<void>;
+  deleteSchedule: (id: string) => Promise<void>;
   getScheduleById: (id: string) => Schedule | undefined;
+  fetchScheduleById: (id: string) => Promise<Schedule>;
   filteredSchedules: Schedule[];
-  setFilterCriteria: React.Dispatch<React.SetStateAction<{
-    doctorName: string;
-    patientName: string;
-    department: string;
-  }>>;
+  setFilterCriteria: React.Dispatch<
+    React.SetStateAction<{
+      doctorName: string;
+      patientName: string;
+      department: string;
+    }>
+  >;
+  autoScheduleEnabled: boolean;
+  toggleAutoSchedule: () => void;
+  loadNextPage: () => void;
 }
 
-const LOCAL_STORAGE_KEY = "hospital_schedules";
+const Ctx = createContext<ScheduleCtx | undefined>(undefined);
 
-const ScheduleContext = createContext<ScheduleContextType | undefined>(undefined);
+export const ScheduleProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [page, setPage] = useState(1);
+  const limit = 20;
 
-export const ScheduleProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Initialize state from localStorage or fall back to initialSchedules
-  const [schedules, setSchedules] = useState<Schedule[]>(() => {
-    if (typeof window !== 'undefined') {
-      const savedSchedules = localStorage.getItem(LOCAL_STORAGE_KEY);
-      return savedSchedules ? JSON.parse(savedSchedules) : initialSchedules;
-    }
-    return initialSchedules;
-  });
-  
   const [filterCriteria, setFilterCriteria] = useState({
     doctorName: "",
     patientName: "",
     department: "",
   });
 
-  // Save to localStorage whenever schedules change
-  useEffect(() => {
-    console.log("Saving schedules to localStorage:", schedules);
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(schedules));
-  }, [schedules]);
+  const [autoScheduleEnabled, setAuto] = useState(true);
 
-  // Filter schedules based on criteria
-  const filteredSchedules = schedules.filter(schedule => {
-    return (
-      (filterCriteria.doctorName === "" || 
-        schedule.doctorName.toLowerCase().includes(filterCriteria.doctorName.toLowerCase())) &&
-      (filterCriteria.patientName === "" || 
-        schedule.patientName.toLowerCase().includes(filterCriteria.patientName.toLowerCase())) &&
-      (filterCriteria.department === "" || filterCriteria.department === "all" || 
-        schedule.department === filterCriteria.department)
+  /* ---------- paginated fetch ---------- */
+  useEffect(() => {
+    const fetchPage = async () => {
+      try {
+        const r = await fetch(
+          `http://localhost:5000/schedules?page=${page}&limit=${limit}`
+        );
+        const j = await r.json();
+        setSchedules((prev) => (page === 1 ? j.data : [...prev, ...j.data]));
+      } catch {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Cannot load schedules",
+        });
+      }
+    };
+    fetchPage();
+  }, [page]);
+
+  const loadNextPage = () => setPage((p) => p + 1);
+
+  /* ---------- websockets ---------- */
+  useEffect(() => {
+    /* wrap body in braces so the callback returns VOID, not Socket */
+    const socket: Socket = io("http://localhost:5000");
+
+    socket.on("new_schedule", (s: Schedule) => {
+      if (autoScheduleEnabled) setSchedules((prev) => [s, ...prev]);
+    });
+
+    socket.on("updated_schedule", (s: Schedule) =>
+      setSchedules((prev) => prev.map((x) => (x.id === s.id ? s : x)))
     );
+
+    socket.on("deleted_schedule", (id: string) =>
+      setSchedules((prev) => prev.filter((x) => x.id !== id))
+    );
+
+    /* cleanup */
+    return () => {
+      socket.disconnect();
+    };
+  }, [autoScheduleEnabled]);
+
+  /* ---------- CRUD helpers ---------- */
+  const addSchedule = async (body: Omit<Schedule, "id">) => {
+    const r = await fetch("http://localhost:5000/schedules", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await r.json();
+    setSchedules((prev) => [data, ...prev]);
+  };
+
+  const updateSchedule = async (id: string, body: Partial<Schedule>) => {
+    const r = await fetch(`http://localhost:5000/schedules/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await r.json();
+    setSchedules((prev) => prev.map((x) => (x.id === id ? data : x)));
+  };
+
+  const deleteSchedule = async (id: string) => {
+    await fetch(`http://localhost:5000/schedules/${id}`, { method: "DELETE" });
+    setSchedules((prev) => prev.filter((x) => x.id !== id));
+  };
+
+  const getScheduleById = (id: string) =>
+    schedules.find((s) => s.id === id);
+
+  const fetchScheduleById = async (id: string) => {
+    const r = await fetch(`http://localhost:5000/schedules/${id}`);
+    return r.json();
+  };
+
+  /* ---------- filtering ---------- */
+  const filteredSchedules = schedules.filter((s) => {
+    const d =
+      !filterCriteria.doctorName ||
+      s.doctorName
+        .toLowerCase()
+        .includes(filterCriteria.doctorName.toLowerCase());
+    const p =
+      !filterCriteria.patientName ||
+      s.patientName
+        .toLowerCase()
+        .includes(filterCriteria.patientName.toLowerCase());
+    const dept =
+      !filterCriteria.department ||
+      filterCriteria.department === "all" ||
+      s.department === filterCriteria.department;
+    return d && p && dept;
   });
 
-  // Add a new schedule
-  const addSchedule = (schedule: Omit<Schedule, "id">) => {
-    const newSchedule = {
-      ...schedule,
-      id: Date.now().toString(), // Generate a unique ID
-    };
-    
-    setSchedules(prevSchedules => {
-      console.log("Adding new schedule:", newSchedule);
-      return [...prevSchedules, newSchedule];
-    });
-    
-    toast({
-      title: "Schedule Added",
-      description: "The appointment has been successfully scheduled",
-    });
-  };
-
-  // Update an existing schedule
-  const updateSchedule = (id: string, updatedSchedule: Omit<Schedule, "id">) => {
-    setSchedules(prevSchedules => {
-      console.log("Updating schedule:", id, updatedSchedule);
-      return prevSchedules.map(schedule => 
-        schedule.id === id 
-          ? { ...updatedSchedule, id } 
-          : schedule
-      );
-    });
-    
-    toast({
-      title: "Schedule Updated",
-      description: "The appointment has been successfully updated",
-    });
-  };
-
-  // Delete a schedule
-  const deleteSchedule = (id: string) => {
-    setSchedules(prevSchedules => {
-      console.log("Deleting schedule:", id);
-      return prevSchedules.filter(schedule => schedule.id !== id);
-    });
-    
-    toast({
-      title: "Schedule Deleted",
-      description: "The appointment has been removed from the system",
-    });
-  };
-
-  // Get a schedule by ID
-  const getScheduleById = (id: string) => {
-    return schedules.find(schedule => schedule.id === id);
-  };
+  const toggleAutoSchedule = useCallback(() => setAuto((a) => !a), []);
 
   return (
-    <ScheduleContext.Provider value={{ 
-      schedules, 
-      addSchedule, 
-      updateSchedule, 
-      deleteSchedule, 
-      getScheduleById,
-      filteredSchedules,
-      setFilterCriteria
-    }}>
+    <Ctx.Provider
+      value={{
+        schedules,
+        addSchedule,
+        updateSchedule,
+        deleteSchedule,
+        getScheduleById,
+        fetchScheduleById,
+        filteredSchedules,
+        setFilterCriteria,
+        autoScheduleEnabled,
+        toggleAutoSchedule,
+        loadNextPage,
+      }}
+    >
       {children}
-    </ScheduleContext.Provider>
+    </Ctx.Provider>
   );
 };
 
 export const useSchedule = () => {
-  const context = useContext(ScheduleContext);
-  if (context === undefined) {
-    throw new Error("useSchedule must be used within a ScheduleProvider");
-  }
-  return context;
+  const ctx = useContext(Ctx);
+  if (!ctx) throw new Error("ScheduleProvider missing");
+  return ctx;
 };
+
+
+
+
+
+
+
+
+
+

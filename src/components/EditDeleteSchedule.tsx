@@ -54,13 +54,7 @@ export const EditDeleteSchedule: React.FC<EditDeleteScheduleProps> = ({ schedule
               ARE YOU SURE YOU WANT TO DELETE THIS SCHEDULE?
             </AlertDialogTitle>
           </AlertDialogHeader>
-          <div className="flex justify-center">
-            <img 
-              src="/lovable-uploads/b51ee7fa-6f61-4228-811c-ece7f1bb2bf2.png" 
-              alt="Trash can with paper" 
-              className="w-40 h-40 object-contain"
-            />
-          </div>
+          
           <AlertDialogFooter className="flex gap-6">
             <AlertDialogAction
               onClick={handleDelete}

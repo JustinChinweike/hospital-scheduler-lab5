@@ -1,4 +1,3 @@
-
 import { Schedule } from "../types/schedule";
 
 // Initial mock data for schedules
@@ -37,12 +36,12 @@ export const initialSchedules: Schedule[] = [
 export const departments = [
   "Cardiology",
   "Neurology",
-  "Surgery",
-  "Orthopedics",
   "Pediatrics",
-  "Dermatology",
-  "Ophthalmology",
+  "Orthopedics",
   "Oncology",
-  "Radiology",
-  "Emergency"
+  "Emergency",
+  "Surgery",
+  "Internal Medicine",
+  "Dermatology",
+  "Psychiatry"
 ];

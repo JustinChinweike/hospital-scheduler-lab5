@@ -1,5 +1,3 @@
-
-import { departments } from "@/data/mockData";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -8,11 +6,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { departments } from "@/data/mockData";
 
 interface DepartmentSelectorProps {
   department: string;
-  setDepartment: (department: string) => void;
-  error: string;
+  setDepartment: (value: string) => void;
+  error?: string;
 }
 
 const DepartmentSelector = ({
@@ -22,10 +21,10 @@ const DepartmentSelector = ({
 }: DepartmentSelectorProps) => {
   return (
     <div className="space-y-2">
-      <Label htmlFor="department">DEPARTMENT:</Label>
+      <Label htmlFor="department-select">Department</Label>
       <Select value={department} onValueChange={setDepartment}>
-        <SelectTrigger className="bg-teal-100 border-teal-200">
-          <SelectValue placeholder="Select department" />
+        <SelectTrigger id="department-select" className={error ? "border-red-500" : ""}>
+          <SelectValue placeholder="Select a department" />
         </SelectTrigger>
         <SelectContent>
           {departments.map((dept) => (
@@ -35,7 +34,7 @@ const DepartmentSelector = ({
           ))}
         </SelectContent>
       </Select>
-      {error && <p className="text-destructive text-sm">{error}</p>}
+      {error && <p className="text-sm text-red-500">{error}</p>}
     </div>
   );
 };

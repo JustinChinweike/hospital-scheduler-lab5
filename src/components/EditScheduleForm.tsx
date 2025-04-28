@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSchedule } from "@/context/ScheduleContext";
@@ -25,11 +24,14 @@ import {
 const EditScheduleForm = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { getScheduleById, updateSchedule, schedules } = useSchedule();
+
+  const { getScheduleById, updateSchedule } = useSchedule();
+
+  /* ---------- local state ---------- */
   const [doctorName, setDoctorName] = useState("");
   const [patientName, setPatientName] = useState("");
   const [date, setDate] = useState<Date | undefined>();
-  const [time, setTime] = useState("");
+  const [time, setTime]   = useState("");
   const [department, setDepartment] = useState("");
   const [errors, setErrors] = useState({
     doctorName: "",
@@ -39,101 +41,65 @@ const EditScheduleForm = () => {
     department: "",
   });
 
+  /* ---------- load schedule once ---------- */
   useEffect(() => {
-    if (id) {
-      const schedule = getScheduleById(id);
-      if (schedule) {
-        setDoctorName(schedule.doctorName);
-        setPatientName(schedule.patientName);
-        
-        // Parse the dateTime
-        const dateObj = parseISO(schedule.dateTime);
-        setDate(dateObj);
-        setTime(format(dateObj, "HH:mm"));
-        
-        setDepartment(schedule.department);
-      } else {
-        // If no schedule found, go back to the schedule list
-        navigate("/list-schedule");
-      }
-    } else {
-      // If no ID provided, show all schedules to select
-      if (schedules.length > 0) {
-        navigate(`/edit-schedule/${schedules[0].id}`);
-      } else {
-        navigate("/");
-      }
-    }
-  }, [id, getScheduleById, navigate, schedules]);
+    if (!id) return;
 
+    const schedule = getScheduleById(id);
+    if (!schedule) {
+      navigate("/list-schedule");                 // nothing to edit
+      return;
+    }
+
+    setDoctorName(schedule.doctorName);
+    setPatientName(schedule.patientName);
+
+    const parsed = parseISO(schedule.dateTime);
+    setDate(parsed);
+    setTime(format(parsed, "HH:mm"));
+    setDepartment(schedule.department);
+  }, [id, getScheduleById, navigate]);            // ❗ removed “schedules”
+
+  /* ---------- validation ---------- */
   const validateForm = () => {
-    let isValid = true;
-    const newErrors = {
-      doctorName: "",
-      patientName: "",
-      date: "",
-      time: "",
-      department: "",
+    const next = {
+      doctorName: doctorName.trim() ? "" : "Doctor name is required",
+      patientName: patientName.trim() ? "" : "Patient name is required",
+      date:  date ? "" : "Date is required",
+      time:  time ? "" : "Time is required",
+      department: department ? "" : "Department is required",
     };
 
-    if (!doctorName.trim()) {
-      newErrors.doctorName = "Doctor name is required";
-      isValid = false;
-    }
-
-    if (!patientName.trim()) {
-      newErrors.patientName = "Patient name is required";
-      isValid = false;
-    }
-
-    if (!date) {
-      newErrors.date = "Date is required";
-      isValid = false;
-    }
-
-    if (!time) {
-      newErrors.time = "Time is required";
-      isValid = false;
-    }
-
-    if (!department) {
-      newErrors.department = "Department is required";
-      isValid = false;
-    }
-
-    setErrors(newErrors);
-    return isValid;
+    setErrors(next);
+    return Object.values(next).every((v) => v === "");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  /* ---------- submit ---------- */
+  const handleSubmit: React.FormEventHandler = async (e) => {
     e.preventDefault();
-    
-    if (validateForm() && id) {
-      // Format date and time for storage
-      const dateTime = date 
-        ? `${format(date, "yyyy-MM-dd")}T${time}:00`
-        : "";
-      
-      updateSchedule(id, {
-        doctorName,
-        patientName,
-        dateTime,
-        department,
-      });
-      
-      navigate("/list-schedule");
-    }
-  };
+    if (!validateForm() || !id) return;
 
-  const handleCancel = () => {
+    /* 💡 build a proper ISO string for zod’s `.datetime()` */
+    const dateTime = date
+      ? new Date(`${format(date, "yyyy-MM-dd")}T${time}`).toISOString()
+      : "";
+
+    await updateSchedule(id, {                    // ⏳ wait for success
+      doctorName,
+      patientName,
+      dateTime,
+      department,
+    });
+
     navigate("/list-schedule");
   };
 
   return (
     <div className="p-6 max-w-2xl mx-auto bg-white rounded-lg">
       <h1 className="text-xl font-bold text-center mb-8">EDIT SCHEDULE</h1>
-      
+
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* ------------ doctor ------------- */}
         <div className="space-y-2">
           <Label htmlFor="doctorName">DOCTOR NAME:</Label>
           <Input
@@ -146,7 +112,8 @@ const EditScheduleForm = () => {
             <p className="text-destructive text-sm">{errors.doctorName}</p>
           )}
         </div>
-        
+
+        {/* ------------ patient ------------ */}
         <div className="space-y-2">
           <Label htmlFor="patientName">PATIENT NAME:</Label>
           <Input
@@ -159,10 +126,12 @@ const EditScheduleForm = () => {
             <p className="text-destructive text-sm">{errors.patientName}</p>
           )}
         </div>
-        
+
+        {/* ----------- date & time ---------- */}
         <div className="space-y-2">
-          <Label htmlFor="date">DATE & TIME:</Label>
+          <Label>DATE &amp; TIME:</Label>
           <div className="flex gap-4">
+            {/* date picker */}
             <div className="flex-1">
               <Popover>
                 <PopoverTrigger asChild>
@@ -189,6 +158,7 @@ const EditScheduleForm = () => {
               )}
             </div>
 
+            {/* time input */}
             <div className="flex-1">
               <Input
                 type="time"
@@ -202,18 +172,16 @@ const EditScheduleForm = () => {
             </div>
           </div>
         </div>
-        
+
+        {/* ----------- department ---------- */}
         <div className="space-y-2">
-          <Label htmlFor="department">DEPARTMENT:</Label>
-          <Select
-            value={department}
-            onValueChange={setDepartment}
-          >
+          <Label>DEPARTMENT:</Label>
+          <Select value={department} onValueChange={setDepartment}>
             <SelectTrigger className="bg-blue-100 border-blue-200">
               <SelectValue placeholder="Select department" />
             </SelectTrigger>
             <SelectContent>
-              {departments.map(dept => (
+              {departments.map((dept) => (
                 <SelectItem key={dept} value={dept}>
                   {dept}
                 </SelectItem>
@@ -224,19 +192,19 @@ const EditScheduleForm = () => {
             <p className="text-destructive text-sm">{errors.department}</p>
           )}
         </div>
-        
+
+        {/* ----------- actions ------------- */}
         <div className="flex justify-between mt-8">
-          <Button 
+          <Button
             type="button"
-            onClick={handleCancel} 
             variant="outline"
             className="px-8 py-4"
+            onClick={() => navigate("/list-schedule")}
           >
             Cancel
           </Button>
-          
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="bg-blue-900 hover:bg-blue-800 text-white px-8 py-4"
           >
             Save Changes

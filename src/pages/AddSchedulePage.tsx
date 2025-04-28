@@ -23,13 +23,7 @@ const AddSchedulePage = () => {
           <div className="w-full flex items-center justify-center">
             <AddScheduleForm />
           </div>
-          <div className="hidden md:flex items-center justify-center">
-            <img 
-              src="/lovable-uploads/93b0c4b4-246f-488b-bb65-a5ecea2207bc.png" 
-              alt="Hospital cross" 
-              className="max-w-full h-auto"
-            />
-          </div>
+         
         </div>
       </div>
     </ScheduleProvider>

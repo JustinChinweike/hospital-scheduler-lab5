@@ -1,69 +1,97 @@
-# Welcome to your Lovable project
+# Welcome to the Hospital Schedule Management project
 
-## Project info
 
-**URL**: https://lovable.dev/projects/8469b5ba-57fa-4b0a-9741-5c3588f9becd
+Hospital Hospital Schedule Management is a web-based system that allows users to book, edit, and manage doctor appointments easily. It provides an intuitive interface for scheduling and modifying medical visits across multiple departments.
 
-## How can I edit this code?
 
-There are several ways of editing your application.
+## Features
+Book Appointments – Patients can schedule visits by selecting a doctor, date, time, and department.
+Edit & Update Appointments – Modify existing appointments with real-time validation.
+View All Scheduled Appointments – Easily see upcoming appointments in a structured list.
+Delete Appointments – Remove an appointment with a confirmation prompt.
+Filter by Doctor, Patient, or Department – Quickly find specific appointments.
 
-**Use Lovable**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/8469b5ba-57fa-4b0a-9741-5c3588f9becd) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Installation & Setup
+ 
 
 Follow these steps:
 
+Clone the Repository
 ```sh
 # Step 1: Clone the repository using the project's Git URL.
 git clone <YOUR_GIT_URL>
 
+
+
+
 # Step 2: Navigate to the project directory.
 cd <YOUR_PROJECT_NAME>
+cd Hospital_Schedule
+
 
 # Step 3: Install the necessary dependencies.
-npm i
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+
+# Step 4: Run the Development Server
 npm run dev
+
+#This starts a local development server. Open http://localhost:5173/ to see the app.
+
 ```
 
-**Edit a file directly in GitHub**
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
 
-**Use GitHub Codespaces**
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Project Structure
+
+📂 src/ – Contains the main source code
+├── 📂 components/ – UI components like buttons, modals, forms
+├── 📂 context/ – Manages global appointment data
+├── 📂 pages/ – Different pages (Home, Add, Edit, List Appointments)
+├── 📂 data/ – Stores mock appointment data
+├── 📂 hooks/ – Custom React hooks (e.g., toast notifications)
+└── etc... 
+
+
+## How to Use
+ ### Adding an Appointment
+Click "Add Schedule"
+Fill in Doctor Name, Patient Name, Date, Time, and Department
+Click "Save"
+
+ #### Editing an Appointment
+Navigate to the "Edit Schedule" page
+Select an appointment to modify
+Update details and click "Save Changes"
+
+### Viewing & Filtering Appointments
+Go to the "List Schedule" page
+Use the search bar and filters to find specific appointments
+
+
+### Deleting an Appointment
+Click "Delete" on an appointment
+Confirm the deletion in the pop-up
+
+
+
 
 ## What technologies are used for this project?
 
-This project is built with .
+- React –  For building an interactive and responsive UI.
+- Vite –  A fast build tool for efficient development.
+- TypeScript – Ensures type safety and better code management.
+- Tailwind CSS – Provides modern styling with utility-first design.
+- ShadCN UI & Radix UI – Enhances the UI with accessible components.
+- React Router – Handles navigation between pages.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
 
-## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/8469b5ba-57fa-4b0a-9741-5c3588f9becd) and click on Share -> Publish.
 
-## I want to use a custom domain - is that possible?
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+## Future Enhancements
+Authentication System – Secure user login/logout
+Database Integration – Store real patient data instead of mock data
+Email & SMS Notifications – Remind users of upcoming appointments
