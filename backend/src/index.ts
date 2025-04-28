@@ -28,7 +28,7 @@ app.use("/uploads", express.static(uploads));
 app.use("/files", downloadRoutes);
 app.use("/schedules", scheduleRoutes);
 
-/* braces → callback returns void, compiler happy */
+/* ✅ braces → callback returns void, compiler happy */
 app.get("/health", (_req, res) => {
   res.send("OK");
 });
