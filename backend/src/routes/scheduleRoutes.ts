@@ -1,5 +1,4 @@
-
-import express, { RequestHandler } from "express";
+import express from "express";
 import multer from "multer";
 import path from "path";
 
@@ -44,12 +43,11 @@ const upload = multer({
 });
 
 /* ---------- routes ---------- */
-router.post("/", authenticateToken, upload.single("file"), createSchedule as RequestHandler);
+router.post("/", authenticateToken, upload.single("file"), createSchedule);
 router.get("/", authenticateToken, getSchedules);
 router.get("/:id", authenticateToken, getScheduleById);
-router.put("/:id", authenticateToken, upload.single("file"), updateSchedule as RequestHandler);
-router.patch("/:id", authenticateToken, upload.single("file"), updateSchedule as RequestHandler);
+router.put("/:id", authenticateToken, upload.single("file"), updateSchedule);
+router.patch("/:id", authenticateToken, upload.single("file"), updateSchedule);
 router.delete("/:id", authenticateToken, deleteSchedule);
 
 export default router;
-

@@ -1,19 +1,19 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Schedule } from '../types/schedule';
 
+export interface PendingOperation {
+  id: string;
+  type: 'CREATE' | 'UPDATE' | 'DELETE';
+  data?: Schedule;
+  timestamp: number;
+}
+
 interface OfflineState {
   isOnline: boolean;
   isServerUp: boolean;
   pendingOperations: PendingOperation[];
   syncPendingOperations: () => Promise<void>;
   queueOperation: (op: PendingOperation) => void;
-}
-
-export interface PendingOperation {
-  id: string;
-  type: 'CREATE' | 'UPDATE' | 'DELETE';
-  data?: Schedule;
-  timestamp: number;
 }
 
 const OfflineContext = createContext<OfflineState | undefined>(undefined);
@@ -30,6 +30,9 @@ export const OfflineProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setPendingOperations(prev => [...prev, op]);
   };
 
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const token = localStorage.getItem('token') || '';
+
   // Monitor network connectivity
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -37,7 +40,6 @@ export const OfflineProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
@@ -48,7 +50,7 @@ export const OfflineProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     const checkServer = async () => {
       try {
-        const response = await fetch('http://localhost:5000/health');
+        const response = await fetch(`${API_URL}/health`);
         setIsServerUp(response.ok);
       } catch {
         setIsServerUp(false);
@@ -56,10 +58,10 @@ export const OfflineProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
 
     const interval = setInterval(checkServer, 30000); // Check every 30 seconds
-    checkServer(); // Initial check
+    checkServer();
 
     return () => clearInterval(interval);
-  }, []);
+  }, [API_URL]);
 
   // Save pending operations to localStorage
   useEffect(() => {
@@ -71,32 +73,41 @@ export const OfflineProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!isOnline || !isServerUp || pendingOperations.length === 0) return;
 
     const operations = [...pendingOperations];
-    setPendingOperations([]); // Clear pending operations
+    setPendingOperations([]);
 
     for (const op of operations) {
       try {
         switch (op.type) {
           case 'CREATE':
-            await fetch('http://localhost:5000/schedules', {
+            await fetch(`${API_URL}/schedules`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
               body: JSON.stringify(op.data),
             });
             break;
 
           case 'UPDATE':
             if (op.data?.id) {
-              await fetch(`http://localhost:5000/schedules/${op.data.id}`, {
+              await fetch(`${API_URL}/schedules/${op.data.id}`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify(op.data),
               });
             }
             break;
 
           case 'DELETE':
-            await fetch(`http://localhost:5000/schedules/${op.data?.id}`, {
+            await fetch(`${API_URL}/schedules/${op.data?.id}`, {
               method: 'DELETE',
+              headers: {
+                'Authorization': `Bearer ${token}`
+              },
             });
             break;
         }
@@ -121,7 +132,7 @@ export const OfflineProvider: React.FC<{ children: React.ReactNode }> = ({ child
         isServerUp,
         pendingOperations,
         syncPendingOperations,
-        queueOperation, 
+        queueOperation,
       }}
     >
       {children}
@@ -136,4 +147,3 @@ export const useOffline = () => {
   }
   return context;
 };
-

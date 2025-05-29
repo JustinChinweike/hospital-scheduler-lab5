@@ -7,6 +7,8 @@ import EditSchedulePage from "./pages/EditSchedulePage";
 import ListSchedulePage from "./pages/ListSchedulePage";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
 
 const App = () => (
   <OfflineProvider>
@@ -14,6 +16,8 @@ const App = () => (
       <Router>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/add-schedule" element={<AddSchedulePage />} />
           <Route path="/edit-schedule/:id" element={<EditSchedulePage />} />
           <Route path="/list-schedule" element={<ListSchedulePage />} />
