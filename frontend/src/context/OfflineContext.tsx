@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Schedule } from '@/types/schedule';
+import { Schedule } from '../types/schedule';
 
 interface OfflineState {
   isOnline: boolean;
   isServerUp: boolean;
   pendingOperations: PendingOperation[];
   syncPendingOperations: () => Promise<void>;
+  queueOperation: (op: PendingOperation) => void;
 }
 
 export interface PendingOperation {
@@ -24,6 +25,10 @@ export const OfflineProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const stored = localStorage.getItem('pendingOperations');
     return stored ? JSON.parse(stored) : [];
   });
+  
+  const queueOperation = (op: PendingOperation) => {
+    setPendingOperations(prev => [...prev, op]);
+  };
 
   // Monitor network connectivity
   useEffect(() => {
@@ -116,6 +121,7 @@ export const OfflineProvider: React.FC<{ children: React.ReactNode }> = ({ child
         isServerUp,
         pendingOperations,
         syncPendingOperations,
+        queueOperation, 
       }}
     >
       {children}

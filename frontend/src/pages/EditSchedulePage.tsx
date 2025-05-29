@@ -1,7 +1,8 @@
+import * as React from "react";
 import { useParams } from "react-router-dom";
-import EditScheduleForm from "@/components/EditScheduleForm";
-import SelectScheduleToEdit from "@/components/SelectScheduleToEdit";
-import { Button } from "@/components/ui/button";
+import EditScheduleForm from "../components/EditScheduleForm";
+import SelectScheduleToEdit from "../components/SelectScheduleToEdit";
+import { Button } from "../components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 

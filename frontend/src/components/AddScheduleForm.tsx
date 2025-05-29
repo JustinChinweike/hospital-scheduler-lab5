@@ -1,18 +1,21 @@
+import * as React from "react";
 import { useState } from "react";
+import { useOffline } from "../context/OfflineContext";
 import { useNavigate } from "react-router-dom";
-import { useSchedule } from "@/context/ScheduleContext";
+import { useSchedule } from "../context/ScheduleContext";
 import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
+import { Button } from "../components/ui/button";
 import NameInput from "./schedule/NameInput";
 import { DateTimeSelector } from "./schedule/DateTimeSelector";
 import DepartmentSelector from "./schedule/DepartmentSelector";
-import { validateScheduleForm, ValidationResult } from "@/utils/formValidation";
-import { toast } from "@/components/ui/use-toast";
+import { validateScheduleForm, ValidationResult } from "../utils/formValidation";
+import { toast } from "../components/ui/use-toast";
 
 const AddScheduleForm = () => {
   const navigate = useNavigate();
   const { addSchedule } = useSchedule();
-
+  const { isOnline, isServerUp, queueOperation } = useOffline();
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   /* local form state ------------------------------------------------ */
@@ -49,17 +52,41 @@ const AddScheduleForm = () => {
         `${format(date!, "yyyy-MM-dd")}T${time}`
       ).toISOString();
 
-      await addSchedule({
+      // await addSchedule({
+      //   doctorName,
+      //   patientName,
+      //   dateTime: dateTimeIso,
+      //   department,
+      // });
+
+     const newSchedule = {
         doctorName,
         patientName,
         dateTime: dateTimeIso,
         department,
-      });
-
+        id: crypto.randomUUID(), // Generate a unique ID for the new schedule
+      };
+        
+      if (isOnline && isServerUp) {
+        await addSchedule(newSchedule);
       toast({ title: "Success", 
         description: "Schedule added successfully." });
       navigate("/list-schedule");
-    } catch (err) {
+    } else{ 
+      queueOperation({
+        id: newSchedule.id,
+        type: "CREATE",
+        data: newSchedule,
+        timestamp: Date.now(),
+      });
+      toast({
+        title: "Offline Mode",
+        description: "You are offline or the server is down. The schedule will be synced automatically.",
+    });  
+    navigate("/list-schedule");
+    }
+
+   } catch (err) {
       console.error("❌ Failed to add schedule:", err);
       toast({
         variant: "destructive",

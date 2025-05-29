@@ -1,31 +1,36 @@
+import{useOffline} from "../context/OfflineContext";
+import { useSchedule } from "../context/ScheduleContext";
+import * as React from "react";
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useSchedule } from "@/context/ScheduleContext";
-import { departments } from "@/data/mockData";
-import { Calendar } from "@/components/ui/calendar";
+import { departments } from "../data/mockData";
+import { Calendar } from "../components/ui/calendar";
 import { format, parseISO } from "date-fns";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
 import { CalendarIcon } from "lucide-react";
+import { toast } from "../components/ui/use-toast";
+
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "../components/ui/popover";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "../components/ui/select";
 
 const EditScheduleForm = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
   const { getScheduleById, updateSchedule } = useSchedule();
+  const { isOnline, isServerUp, queueOperation } = useOffline();
 
   /* ---------- local state ---------- */
   const [doctorName, setDoctorName] = useState("");
@@ -78,22 +83,37 @@ const EditScheduleForm = () => {
   const handleSubmit: React.FormEventHandler = async (e) => {
     e.preventDefault();
     if (!validateForm() || !id) return;
-
-    /* 💡 build a proper ISO string for zod’s `.datetime()` */
+  
     const dateTime = date
       ? new Date(`${format(date, "yyyy-MM-dd")}T${time}`).toISOString()
       : "";
-
-    await updateSchedule(id, {                    // ⏳ wait for success
+  
+    const updatedSchedule = {
+      id,
       doctorName,
       patientName,
       dateTime,
       department,
-    });
-
+    };
+  
+    if (isOnline && isServerUp) {
+      await updateSchedule(updatedSchedule);
+      // Optionally show a success toast here
+    } else {
+      queueOperation({
+        id: crypto.randomUUID(),
+        type: "UPDATE",
+        data: updatedSchedule,
+        timestamp: Date.now(),
+      });
+      toast({
+        title: "Offline",
+        description: "Changes will be synced when you're back online.",
+      });
+    }
     navigate("/list-schedule");
-  };
-
+  
+  }
   return (
     <div className="p-6 max-w-2xl mx-auto bg-white rounded-lg">
       <h1 className="text-xl font-bold text-center mb-8">EDIT SCHEDULE</h1>

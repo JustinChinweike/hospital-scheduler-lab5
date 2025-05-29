@@ -1,15 +1,15 @@
-
+import * as React from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSchedule } from "@/context/ScheduleContext";
+import { useSchedule } from "../context/ScheduleContext";
 import { format, parseISO } from "date-fns";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
 import {
   Card,
   CardContent,
-} from "@/components/ui/card";
+} from "../components/ui/card";
 
 const SelectScheduleToEdit = () => {
   const navigate = useNavigate();

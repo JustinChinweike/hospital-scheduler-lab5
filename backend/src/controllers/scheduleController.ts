@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/consistent-type-assertions */
-import { Request, Response, RequestHandler } from "express";
+import { Request, Response, RequestHandler, NextFunction } from "express";
 import { v4 as uuid } from "uuid";
 import { z } from "zod";
 import { schedules, Schedule } from "../models/scheduleModel";
 import { io } from "../socket";
-
+import { AuthRequest } from "../middlewares/auth";
 /* ─────────────── types / schema ──────────────── */
 interface MulterRequest extends Request {
   file?: Express.Multer.File;
@@ -39,7 +39,7 @@ const sort = (list: Schedule[], by: keyof Schedule, order: "asc" | "desc") => {
 /* ─────────────── CRUD ──────────────── */
 
 /** POST /schedules */
-export const createSchedule: RequestHandler = (req, res) => {
+export const createSchedule = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const parsed = scheduleSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ errors: parsed.error.errors });   
@@ -62,7 +62,7 @@ export const createSchedule: RequestHandler = (req, res) => {
 };
 
 /** GET /schedules */
-export const getSchedules: RequestHandler = (req, res) => {
+export const getSchedules = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const {
     doctorName = "",
     patientName = "",
@@ -92,7 +92,7 @@ export const getSchedules: RequestHandler = (req, res) => {
 };
 
 /** GET /schedules/:id */
-export const getScheduleById: RequestHandler = (req, res) => {
+export const getScheduleById = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const found = schedules.find((s) => s.id === req.params.id);
   if (!found) {
     res.status(404).send("Not found");       
@@ -102,7 +102,7 @@ export const getScheduleById: RequestHandler = (req, res) => {
 };
 
 /** PATCH /schedules/:id */
-export const updateSchedule: RequestHandler = (req, res) => {
+export const updateSchedule = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const idx = schedules.findIndex((s) => s.id === req.params.id);
   if (idx === -1) {
     res.status(404).send("Not found");      
@@ -130,7 +130,7 @@ export const updateSchedule: RequestHandler = (req, res) => {
 };
 
 /** DELETE /schedules/:id */
-export const deleteSchedule: RequestHandler = (req, res) => {
+export const deleteSchedule = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const idx = schedules.findIndex((s) => s.id === req.params.id);
   if (idx === -1) {
     res.status(404).send("Not found");          //   no return

@@ -1,7 +1,10 @@
 
+import * as React from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { useSchedule } from "@/context/ScheduleContext";
+import { Button } from "../components/ui/button";
+import { useSchedule } from "../context/ScheduleContext";
+import { useOffline } from "../context/OfflineContext";
+import { toast } from "../components/ui/use-toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,13 +15,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "../components/ui/alert-dialog";
 
 interface EditDeleteScheduleProps {
   scheduleId: string;
 }
 
 export const EditDeleteSchedule: React.FC<EditDeleteScheduleProps> = ({ scheduleId }) => {
+  const { isOnline, isServerUp, queueOperation } = useOffline();
   const navigate = useNavigate();
   const { deleteSchedule } = useSchedule();
 
@@ -26,8 +30,21 @@ export const EditDeleteSchedule: React.FC<EditDeleteScheduleProps> = ({ schedule
     navigate(`/edit-schedule/${scheduleId}`);
   };
 
-  const handleDelete = () => {
-    deleteSchedule(scheduleId);
+  const handleDelete = async () => {
+    if (isOnline && isServerUp) {
+      await deleteSchedule(scheduleId);
+      toast({ title: "Deleted", description: "Schedule deleted." });
+    } else {
+      queueOperation({
+        id: scheduleId,
+        type: "DELETE",
+        timestamp: Date.now(),
+      });
+      toast({
+        title: "Offline",
+        description: "Delete will be synced when you're back online.",
+      });
+    }
   };
 
   return (

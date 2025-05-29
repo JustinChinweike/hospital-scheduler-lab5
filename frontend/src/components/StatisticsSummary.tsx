@@ -1,6 +1,6 @@
 // src/components/StatisticsSummary.tsx
 import React, { useEffect, useState } from "react";
-import { useSchedule } from "@/context/ScheduleContext";
+import { useSchedule } from "../context/ScheduleContext";
 
 const StatisticsSummary = () => {
   const { schedules } = useSchedule();

@@ -1,6 +1,7 @@
+import * as React from "react";
 import { useEffect } from "react";
-import Navigation from "@/components/Navigation";
-import { toast } from "@/hooks/use-toast";
+import Navigation from "../components/Navigation";
+import { toast } from "../hooks/use-toast";
 
 const Index = () => {
   useEffect(() => {

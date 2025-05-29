@@ -1,12 +1,13 @@
-import { Label } from "@/components/ui/label";
+import * as React from "react";
+import { Label } from "../ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { departments } from "@/data/mockData";
+} from "../ui/select";
+import { departments } from "../../data/mockData";
 
 interface DepartmentSelectorProps {
   department: string;

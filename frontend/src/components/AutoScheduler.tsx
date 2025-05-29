@@ -1,6 +1,6 @@
 // src/components/AutoScheduler.tsx
 import { useEffect } from "react";
-import { useSchedule } from "@/context/ScheduleContext";
+import { useSchedule } from "../context/ScheduleContext";
 
 const AutoScheduler = () => {
   useEffect(() => {

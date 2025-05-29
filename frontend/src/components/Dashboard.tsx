@@ -1,6 +1,6 @@
-// src/components/Dashboard.tsx
-import { useSchedule } from "@/context/ScheduleContext";
-import { ConnectionStatus } from "@/components/ConnectionStatus";
+import * as React from "react";
+import { useSchedule } from "../context/ScheduleContext";
+import { ConnectionStatus } from "../components/ConnectionStatus";
 import {
   BarChart,
   Bar,
@@ -13,8 +13,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { format, parseISO } from "date-fns";
-import { Button } from "@/components/ui/button";
-import { toast } from "@/hooks/use-toast";
+import { Button } from "../components/ui/button";
+import { toast } from "../hooks/use-toast";
 
 const Dashboard = () => {
   const { schedules, autoScheduleEnabled, toggleAutoSchedule } = useSchedule();
@@ -45,12 +45,12 @@ const Dashboard = () => {
   const handleToggle = () => {
     toggleAutoSchedule();
     toast({
-      title: autoScheduleEnabled
-        ? "Auto-Scheduler Disabled"
-        : "Auto-Scheduler Enabled",
-      description: autoScheduleEnabled
-        ? "Real-time automatic schedule generation is now off."
-        : "Auto-scheduling is now running every 10 seconds.",
+      title: !autoScheduleEnabled
+        ? "Auto-Scheduler Enabled"
+        : "Auto-Scheduler Disabled",
+      description: !autoScheduleEnabled
+        ? "Real-time automatic schedule generation is now on."
+        : "Real-time automatic schedule generation is now off.",
     });
   };
 
@@ -58,7 +58,7 @@ const Dashboard = () => {
     <div className="p-6 space-y-12 bg-white rounded-lg shadow-xl">
       <ConnectionStatus />
       {/* 🔁 Auto-scheduler toggle */}
-      <div className="flex justify-center">
+      <div className="flex justify-center mb-4">
         <Button
           onClick={handleToggle}
           variant="outline"

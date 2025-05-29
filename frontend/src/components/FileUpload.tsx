@@ -1,102 +1,86 @@
-import { useState } from "react";
-import { apiClient } from "@/api/apiClient";
-import { toast } from "@/hooks/use-toast";
+import React, { useState } from "react";
+import Papa from "papaparse";
+import { useSchedule } from "../context/ScheduleContext";
+import { toast } from "../hooks/use-toast";
+import { Button } from "./ui/button";
 
 const FileUpload = () => {
   const [file, setFile] = useState<File | null>(null);
-  const [progress, setProgress] = useState(0);
+  const [uploading, setUploading] = useState(false);
+  const { addSchedule } = useSchedule();
 
-  const handleUpload = async () => {
-    if (!file)
-      return toast({
-        title: "No File",
-        description: "Please select a file first.",
-      });
-
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("doctorName", "File Doctor");
-    formData.append("patientName", "File Patient");
-    formData.append("dateTime", new Date().toISOString());
-    formData.append("department", "Radiology");
-
-    try {
-      await apiClient.post("/schedules", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-        onUploadProgress: (e) =>
-          setProgress(Math.round((e.loaded * 100) / (e.total || 1))),
-      });
-      toast({
-        title: "File Uploaded",
-        description: "Appointment created with file.",
-      });
-      setFile(null);
-      setProgress(0);
-    } catch {
+  const handleUpload = () => {
+    if (!file) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Upload failed",
+        title: "No File",
+        description: "Please select a CSV file first.",
       });
+      return;
     }
+    setUploading(true);
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        let successCount = 0;
+        let failCount = 0;
+        for (const row of results.data as any[]) {
+          // Log row for debugging
+          console.log("Parsed row:", row);
+          // Validate required fields
+          if (
+            row.doctorName &&
+            row.patientName &&
+            row.dateTime &&
+            row.department
+          ) {
+            try {
+              await addSchedule({
+                doctorName: row.doctorName,
+                patientName: row.patientName,
+                dateTime: row.dateTime,
+                department: row.department,
+              });
+              successCount++;
+            } catch {
+              failCount++;
+            }
+          } else {
+            failCount++;
+          }
+        }
+        toast({
+          title: "Import Complete",
+          description: `Imported ${successCount} schedules${failCount ? `, ${failCount} failed` : ""}.`,
+        });
+        setFile(null);
+        setUploading(false);
+      },
+      error: () => {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to parse CSV file.",
+        });
+        setUploading(false);
+      },
+    });
   };
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-2">
       <input
         type="file"
-        accept="image/*,application/pdf,video/*"
+        accept=".csv"
         onChange={(e) => setFile(e.target.files?.[0] || null)}
+        disabled={uploading}
       />
-      {progress > 0 && <p>Uploading… {progress}%</p>}
-      <button onClick={handleUpload}>Upload</button>
+      <Button onClick={handleUpload} disabled={!file || uploading}>
+        {uploading ? "Uploading..." : "Upload CSV"}
+      </Button>
     </div>
   );
 };
 
 export default FileUpload;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// // src/components/FileUpload.tsx
-// import React, { useState } from "react";
-// import { apiClient } from "@/api/apiClient";
-// import { toast } from "@/hooks/use-toast";
-
-// const FileUpload = () => {
-//   const [file, setFile] = useState<File | null>(null);
-
-//   const handleUpload = async () => {
-//     if (!file) return toast({ title: "No File", description: "Please select a file first." });
-
-//     const formData = new FormData();
-//     formData.append("file", file);
-//     formData.append("doctorName", "File Doctor");
-//     formData.append("patientName", "File Patient");
-//     formData.append("dateTime", new Date().toISOString());
-//     formData.append("department", "Radiology");
-
-//     const res = await apiClient.post("/schedules", formData);
-//     toast({ title: "File Uploaded", description: "Appointment created with file." });
-//   };
-
-//   return (
-//     <div>
-//       <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-//       <button onClick={handleUpload}>Upload</button>
-//     </div>
-//   );
-// };
-
-// export default FileUpload;

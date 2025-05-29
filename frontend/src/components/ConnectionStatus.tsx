@@ -1,5 +1,6 @@
-import { useOffline } from '@/context/OfflineContext';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import * as React from "react";
+import { useOffline } from '../context/OfflineContext';
+import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 
 export const ConnectionStatus = () => {

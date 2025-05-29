@@ -1,3 +1,4 @@
+
 import express, { RequestHandler } from "express";
 import multer from "multer";
 import path from "path";
@@ -9,6 +10,7 @@ import {
   updateSchedule,
   deleteSchedule,
 } from "../controllers/scheduleController";
+import { authenticateToken } from "../middlewares/auth";
 
 const router = express.Router();
 
@@ -34,28 +36,20 @@ const upload = multer({
     ].includes(file.mimetype);
 
     if (allowed) {
-      /* accept file – first arg null, second true */
       cb(null, true);
     } else {
-      /* reject file – pass only the Error */
       cb(new Error("Bad file type"));
     }
   },
 });
 
 /* ---------- routes ---------- */
-router.post("/", upload.single("file"), createSchedule as RequestHandler);
-router.get("/", getSchedules);
-router.get("/:id", getScheduleById);
-router.put("/:id", upload.single("file"), updateSchedule as RequestHandler);
-router.patch("/:id", upload.single("file"), updateSchedule as RequestHandler);
-router.delete("/:id", deleteSchedule);
+router.post("/", authenticateToken, upload.single("file"), createSchedule as RequestHandler);
+router.get("/", authenticateToken, getSchedules);
+router.get("/:id", authenticateToken, getScheduleById);
+router.put("/:id", authenticateToken, upload.single("file"), updateSchedule as RequestHandler);
+router.patch("/:id", authenticateToken, upload.single("file"), updateSchedule as RequestHandler);
+router.delete("/:id", authenticateToken, deleteSchedule);
 
 export default router;
-
-
-
-
-
-
 

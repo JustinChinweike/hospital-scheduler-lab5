@@ -1,6 +1,8 @@
-import { useOffline } from "@/context/OfflineContext";
+
+import React from "react";
+import { useOffline } from "../context/OfflineContext";
 import { AlertCircle, CloudOff, Server, ServerOff, Wifi, WifiOff } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "../lib/utils";
 
 export function NetworkStatus() {
   const { isOnline, isServerUp, pendingOperations } = useOffline();
